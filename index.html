@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flip 7: Vengeance - Next-Draw Odds & Player Bust Risk Tracker</title>
+    <meta name="description" content="Real-time draw pile odds tracker, player bust risk calculator, and BGA auto-sync suite for Flip 7: Vengeance (114 cards).">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-title-group">
+                <h1>🔥 Flip 7: Vengeance <span style="font-size: 0.9rem; font-weight: 500; color: var(--accent-purple); border: 1px solid var(--special-border); padding: 3px 10px; border-radius: 20px;">114 Deck Tracker</span></h1>
+                <div class="subtitle">Next-Draw Probabilities & Player Bust Risk Calculator</div>
+            </div>
+            <div class="header-controls">
+                <button class="btn btn-secondary" id="btnScriptModal">🔌 Get BGA Script</button>
+                <button class="btn btn-danger" id="btnReshuffle">🔄 Reshuffle Deck</button>
+                <button class="btn btn-primary" id="btnResetAll">✨ New Game</button>
+            </div>
+        </header>
+
+        <!-- Player Hand & Bust Risk Window -->
+        <section class="hand-risk-widget">
+            <div class="hand-display-area">
+                <div class="widget-label">
+                    <span>🎴 My Current Hand Cards</span>
+                    <button id="btnClearHand" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; text-decoration: underline;">(Clear Hand)</button>
+                </div>
+                <div class="my-hand-cards" id="myHandCardsContainer">
+                    <span style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;">No cards in hand. Click "+ Hand" on any card below to add it.</span>
+                </div>
+            </div>
+            <div class="bust-risk-box">
+                <span class="stat-label">Player Bust Odds</span>
+                <div class="bust-risk-val" id="playerBustVal" style="color: var(--odds-low);">0.0%</div>
+                <span class="stat-hint" id="playerBustHint">Chance next draw hits your hand</span>
+            </div>
+        </section>
+
+        <!-- Stats Overview Bar -->
+        <section class="stats-bar">
+            <div class="stat-card">
+                <span class="stat-label">Draw Pile Remaining</span>
+                <span class="stat-value" id="statDrawCount">114</span>
+                <span class="stat-hint" id="statDrawPercent">114 Total Cards in Deck</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Discard Pile</span>
+                <span class="stat-value" id="statDiscardCount">0</span>
+                <span class="stat-hint">Cards from completed turns</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">My Hand Count</span>
+                <span class="stat-value" id="statMyHandCount">0</span>
+                <span class="stat-hint">Active held cards</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">BGA Auto-Sync</span>
+                <span class="stat-value" id="statBgaStatus" style="font-size: 1.1rem; color: var(--odds-low);">Receiver Active</span>
+                <span class="stat-hint" id="statBgaChannel">BroadcastChannel Ready</span>
+            </div>
+        </section>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Left Main Column: Cards Grids -->
+            <main>
+                <!-- Standard Number Cards (1 - 13) -->
+                <div class="section-title">
+                    <span>🃏 Standard Number Cards (1 to 13)</span>
+                    <span class="badge">91 Total Number Cards</span>
+                </div>
+                <div class="cards-grid" id="standardCardsGrid">
+                    <!-- Dynamic rendering via app.js -->
+                </div>
+
+                <!-- Special Action Cards (Special 0, Special 7, Special 13 - 1 copy each) -->
+                <div class="section-title" style="margin-top: 12px;">
+                    <span>⭐ Special Action Cards (Itemized)</span>
+                    <span class="badge" style="background: rgba(217, 70, 239, 0.2); color: var(--odds-extreme);">1 Copy Each</span>
+                </div>
+                <div class="cards-grid" id="specialCardsGrid">
+                    <!-- Dynamic rendering via app.js -->
+                </div>
+
+                <!-- Lumped Action Cards Deck (20 cards) -->
+                <div class="section-title" style="margin-top: 12px;">
+                    <span>⚡ Action Cards (Generic Lumped Deck)</span>
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.2); color: var(--accent-blue);">20 Total Action Cards</span>
+                </div>
+                <div class="cards-grid" id="actionCardsGrid">
+                    <!-- Dynamic rendering via app.js -->
+                </div>
+            </main>
+
+            <!-- Right Sidebar Panel -->
+            <aside class="sidebar-panel">
+                <!-- Reshuffle Alert Banner -->
+                <div class="reshuffle-banner hidden" id="reshuffleBanner">
+                    <div class="banner-header">
+                        <span>🔄</span>
+                        <span>Deck Reshuffled!</span>
+                    </div>
+                    <div class="banner-desc" id="reshuffleBannerText">
+                        Discard pile shuffled into draw deck. Active cards in play were excluded.
+                    </div>
+                </div>
+
+                <!-- BGA Live Log Feed & Test Scraper -->
+                <div class="panel-box">
+                    <div class="section-title">
+                        <span>📡 Live BGA Log Feed</span>
+                    </div>
+                    <div class="bga-status-indicator">
+                        <span class="dot connected" id="bgaDot"></span>
+                        <span id="bgaStatusText">BGA Listener Ready</span>
+                    </div>
+                    <div class="log-stream-box" id="logStream">
+                        <div class="log-entry">
+                            <span class="timestamp">System</span> 114 Card Flip 7 Vengeance Tracker initialized.
+                        </div>
+                    </div>
+                    <!-- Simulator / Manual Test Input -->
+                    <div style="margin-top: 14px; display: flex; gap: 8px;">
+                        <input type="text" id="inputTestLog" placeholder="Test BGA log (e.g. 'Player flips 13')" style="flex: 1; background: rgba(2, 6, 23, 0.8); border: 1px solid var(--border-color); color: #fff; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.85rem;">
+                        <button class="btn btn-secondary" id="btnTestLog" style="padding: 8px 12px;">Simulate</button>
+                    </div>
+                </div>
+
+                <!-- BGA Automation Instructions -->
+                <div class="panel-box">
+                    <div class="section-title">
+                        <span>💡 How to Automate with BGA</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 10px; line-height: 1.4;">
+                        <p>1. Open BGA game tab & this Tracker tab in the <strong>same browser</strong>.</p>
+                        <p>2. Install Tampermonkey script or use the 1-click Bookmarklet.</p>
+                        <p>3. As cards are flipped on BGA, card counts & bust probabilities update automatically!</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Script Export Modal -->
+    <div class="modal-overlay" id="scriptModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>🔌 BGA Auto-Sync Script & Bookmarklet</h3>
+                <button class="close-modal" id="btnCloseModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 12px;">
+                    <strong>Option 1: Tampermonkey Userscript</strong>
+                </p>
+                <div class="code-block" id="scriptCodeBlock"></div>
+                <div style="margin-top: 10px; margin-bottom: 20px; display: flex; justify-content: flex-end;">
+                    <button class="btn btn-primary" id="btnCopyScript">📋 Copy Tampermonkey Script</button>
+                </div>
+
+                <hr style="border-color: var(--border-color); margin-bottom: 16px;">
+
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 12px;">
+                    <strong>Option 2: 1-Click Firefox / Chrome Bookmarklet (No Extension Required!)</strong>
+                </p>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px;">
+                    Add a new Bookmark to your Bookmarks Toolbar with URL:
+                </div>
+                <div class="code-block" style="max-height: 80px;" id="bookmarkletCodeBlock"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
