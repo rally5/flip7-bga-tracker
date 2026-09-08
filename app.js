@@ -26,21 +26,28 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'num_13', name: '13', type: 'standard', value: 13, initialCount: 13 },
 
         // Itemized Special Cards (1 copy each = 3 cards)
-        { id: 'spec_0', name: 'Special 0', type: 'special', value: 'S0', initialCount: 1 },
-        { id: 'spec_7', name: 'Special 7', type: 'special', value: 'S7', initialCount: 1 },
-        { id: 'spec_13', name: 'Special 13', type: 'special', value: 'S13', initialCount: 1 },
+        { id: 'spec_0', name: 'L0', type: 'special', value: 'S0', initialCount: 1 },
+        { id: 'spec_7', name: 'L7', type: 'special', value: 'S7', initialCount: 1 },
+        { id: 'spec_13', name: 'L13', type: 'special', value: 'S13', initialCount: 1 },
 
-        // Generic Lumped Action Cards Deck (20 cards)
-        { id: 'action_deck', name: 'Action Cards', type: 'action_lump', value: 'ACT', initialCount: 20 }
+        // Itemized Action Cards (Total 20 cards, exact counts estimated until known)
+        { id: 'act_steal', name: 'Steal', type: 'action_lump', value: 'ACT', initialCount: 3 },
+        { id: 'act_swap', name: 'Swap', type: 'action_lump', value: 'ACT', initialCount: 3 },
+        { id: 'act_discard', name: 'Discard', type: 'action_lump', value: 'ACT', initialCount: 3 },
+        { id: 'act_onemore', name: '+1', type: 'action_lump', value: 'ACT', initialCount: 3 },
+        { id: 'act_draw4', name: 'Flip 4', type: 'action_lump', value: 'ACT', initialCount: 3 },
+        { id: 'act_negative', name: '-#', type: 'action_lump', value: 'ACT', initialCount: 5 }
     ];
 
     // State Tracking
     let drawPile = {};
     let discardPile = {};
     let myHand = {}; // Stores counts of cards in player's hand
+    let opponentHands = {}; // Stores counts of cards for each opponent username
 
     // Initialize Game State
     function initGame() {
+        opponentHands = {};
         CARD_DEFS.forEach(card => {
             drawPile[card.id] = card.initialCount;
             discardPile[card.id] = 0;
@@ -66,30 +73,54 @@ document.addEventListener('DOMContentLoaded', () => {
         return Object.values(myHand).reduce((sum, val) => sum + val, 0);
     }
 
-    // Draw Card by Opponent or Discard (- Draw)
-    function drawCardOther(cardId) {
+    // Draw Card by Opponent (Goes to their hand, not discard!)
+    function drawCardOther(cardId, username = null) {
+        const cardDef = CARD_DEFS.find(c => c.id === cardId);
         if (drawPile[cardId] > 0) {
             drawPile[cardId]--;
-            discardPile[cardId]++;
+            if (username) {
+                if (!opponentHands[username]) opponentHands[username] = {};
+                if (!opponentHands[username][cardId]) opponentHands[username][cardId] = 0;
+                opponentHands[username][cardId]++;
+            } else {
+                discardPile[cardId]++; // Fallback
+            }
             updateUI();
-            const cardDef = CARD_DEFS.find(c => c.id === cardId);
-            logMessage(`Drawn (Other): ${cardDef.name}. Remaining in pile: ${drawPile[cardId]}`);
+            logMessage(`Drawn by ${username || 'Opponent'}: ${cardDef.name}. Remaining: ${drawPile[cardId]}`);
             return true;
+        } else {
+            logMessage(`⚠️ Missed Draw: ${cardDef.name} was drawn by ${username || 'Opp'}, but tracker says 0 remaining!`, true);
+            return false;
         }
-        return false;
     }
 
-    // Draw Card into My Hand (+ Hand)
+    // Draw Card into My Hand (+ Hand) from Draw Pile (Changes Inventory)
     function drawCardToMyHand(cardId) {
+        const cardDef = CARD_DEFS.find(c => c.id === cardId);
         if (drawPile[cardId] > 0) {
             drawPile[cardId]--;
             myHand[cardId]++;
             updateUI();
-            const cardDef = CARD_DEFS.find(c => c.id === cardId);
             logMessage(`+ Added to My Hand: ${cardDef.name}. Total in hand: ${myHand[cardId]}`);
             return true;
+        } else {
+            logMessage(`⚠️ Missed Draw: ${cardDef.name} was added to hand, but tracker says 0 remaining!`, true);
+            return false;
         }
-        return false;
+    }
+
+    // Quick Add Card to My Hand (Does NOT change draw inventory, assumes BGA sync already deducted it)
+    function quickAddCardToMyHand(cardId) {
+        myHand[cardId]++;
+        
+        // If it was already counted as discarded by auto-sync, we can optionally remove it from discard
+        if (discardPile[cardId] > 0) {
+            discardPile[cardId]--;
+        }
+        
+        updateUI();
+        const cardDef = CARD_DEFS.find(c => c.id === cardId);
+        logMessage(`+ Quick Added to My Hand: ${cardDef.name} (Inventory untouched).`);
     }
 
     // Remove Card from My Hand
@@ -100,6 +131,35 @@ document.addEventListener('DOMContentLoaded', () => {
             updateUI();
             const cardDef = CARD_DEFS.find(c => c.id === cardId);
             logMessage(`Removed ${cardDef.name} from My Hand to Discard.`);
+        }
+    }
+
+    // Clear entirely player's hand
+    function clearMyHand() {
+        CARD_DEFS.forEach(card => {
+            discardPile[card.id] += myHand[card.id];
+            myHand[card.id] = 0;
+        });
+        updateUI();
+    }
+
+    // Discard entire hand for an opponent
+    function discardOpponentHand(username) {
+        if (opponentHands[username]) {
+            Object.keys(opponentHands[username]).forEach(cardId => {
+                discardPile[cardId] += opponentHands[username][cardId];
+                opponentHands[username][cardId] = 0;
+            });
+            updateUI();
+        }
+    }
+
+    // Remove specific card from opponent's hand (due to discard action)
+    function removeCardFromOpponentHand(cardId, username) {
+        if (opponentHands[username] && opponentHands[username][cardId] > 0) {
+            opponentHands[username][cardId]--;
+            discardPile[cardId]++;
+            updateUI();
         }
     }
 
@@ -124,8 +184,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const myHandCount = getTotalMyHandCount();
 
         CARD_DEFS.forEach(card => {
-            // Draw pile becomes discard pile
-            drawPile[card.id] = discardPile[card.id];
+            // Add discard pile back into the draw pile
+            drawPile[card.id] += discardPile[card.id];
             discardPile[card.id] = 0;
             // Cards in myHand remain where they are!
         });
@@ -302,6 +362,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Initialize Quick Add Dropdown (1-13)
+    function initQuickAddDropdown() {
+        const select = document.getElementById('selectQuickAdd');
+        const btnAdd = document.getElementById('btnQuickAdd');
+        if (!select || !btnAdd) return;
+        
+        select.innerHTML = '';
+        
+        // Populate options for standard cards 1-13
+        CARD_DEFS.filter(c => c.type === 'standard').forEach(card => {
+            const opt = document.createElement('option');
+            opt.value = card.id;
+            opt.textContent = `+${card.name}`;
+            select.appendChild(opt);
+        });
+
+        btnAdd.addEventListener('click', () => {
+            const id = select.value;
+            if (id) {
+                quickAddCardToMyHand(id);
+            }
+        });
+    }
+
     // Update Overview Stats
     function updateUI() {
         const totalDraw = getTotalDrawCount();
@@ -390,31 +474,114 @@ document.addEventListener('DOMContentLoaded', () => {
 
     startServerPolling();
 
+    function extractUsername(logText) {
+        const matches = [...logText.matchAll(/class="playername"[^>]*>\s*([^<]+?)\s*<\/span>/ig)];
+        if (matches && matches.length > 0) {
+            return matches[0][1].trim().toLowerCase();
+        }
+        return null;
+    }
+
     function handleBgaLogString(logText) {
         if (!logText) return;
         const lower = logText.toLowerCase();
 
-        // Reshuffle detection
-        if (lower.includes('reshuffle') || lower.includes('reshuffled') || lower.includes('shuffled the discard')) {
+        // Extract the user taking the action
+        const actionUser = extractUsername(logText);
+        const myUser = document.getElementById('inputMyUsername').value.trim().toLowerCase();
+        
+        let targetFunc = (cardId) => drawCardOther(cardId, actionUser);
+        if (myUser && actionUser === myUser) {
+            targetFunc = drawCardToMyHand;
+        }
+
+        // Reshuffle detection (Mid-round when deck is empty)
+        if (lower.includes('reshuffle') || lower.includes('reshuffled') || lower.includes('shuffled the discard') || lower.includes('all the discarded cards are shuffled')) {
             triggerReshuffle();
             return;
         }
 
-        // Special Cards
-        if (lower.includes('special 13') || lower.includes('13 special')) {
-            drawCardOther('spec_13');
-            return;
-        }
-        if (lower.includes('special 7') || lower.includes('7 special')) {
-            drawCardOther('spec_7');
-            return;
-        }
-        if (lower.includes('special 0') || lower.includes('0 special')) {
-            drawCardOther('spec_0');
+        // New Round detection (Move all active hands to discard pile, deck continues)
+        if (lower.includes('new round')) {
+            clearMyHand();
+            Object.keys(opponentHands).forEach(username => {
+                discardOpponentHand(username);
+            });
+            logMessage('🔄 New Round: All hands moved to the discard pile! Draw deck continues.');
             return;
         }
 
-        // Standard Cards (13 down to 1)
+        // Mass Discard detection (e.g., Unlucky 7 or Bust)
+        if (lower.includes('discards all their cards') || lower.includes('busts')) {
+            if (actionUser) {
+                if (actionUser === myUser) {
+                    clearMyHand();
+                    logMessage('💥 You busted or hit Unlucky 7: Auto-cleared your hand into discards.');
+                } else {
+                    discardOpponentHand(actionUser);
+                    logMessage(`💥 ${actionUser} busted: Auto-cleared their hand into discards.`);
+                }
+            }
+            return;
+        }
+
+        // Single Card Discard detection (from Discard action card)
+        if (lower.includes('discards sprite-c')) {
+            if (actionUser) {
+                const discardMatch = lower.match(/discards sprite-c(\d+)/);
+                if (discardMatch) {
+                    const dNum = parseInt(discardMatch[1], 10);
+                    if (dNum >= 1 && dNum <= 13 && !lower.includes(`sprite-c${dNum}b`)) {
+                        if (actionUser === myUser) {
+                            removeCardFromMyHand(`num_${dNum}`);
+                        } else {
+                            removeCardFromOpponentHand(`num_${dNum}`, actionUser);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 1. Standard & Special Cards (Must be preceded by "gets")
+        if (lower.includes('gets')) {
+            if (lower.includes('sprite-c0')) {
+                targetFunc('spec_0');
+            } else if (lower.includes('sprite-c7b')) {
+                targetFunc('spec_7');
+            } else if (lower.includes('sprite-c13b')) {
+                targetFunc('spec_13');
+            } else {
+                const spriteMatch = lower.match(/sprite-c(\d+)/);
+                if (spriteMatch) {
+                    const num = parseInt(spriteMatch[1], 10);
+                    if (num >= 1 && num <= 13 && !lower.includes(`sprite-c${num}b`)) {
+                        targetFunc(`num_${num}`);
+                    }
+                }
+            }
+        }
+
+        // 2. Action Cards (Usually preceded by "gives" or "resolves")
+        if (lower.includes('gives') || lower.includes('resolves')) {
+            if (lower.includes('sprite-sst')) {
+                targetFunc('act_steal');
+            } else if (lower.includes('sprite-ssw')) {
+                targetFunc('act_swap');
+            } else if (lower.includes('sprite-sdi')) {
+                targetFunc('act_discard');
+            } else if (lower.includes('sprite-sf4')) {
+                targetFunc('act_draw4');
+            } else if (lower.includes('sprite-sju')) {
+                targetFunc('act_onemore');
+            } else {
+                const rMatch = lower.match(/sprite-r(\d+)/);
+                if (rMatch) {
+                    targetFunc('act_negative');
+                }
+            }
+        }
+
+        // Standard Cards (13 down to 1) - Fallback for text
         for (let i = 13; i >= 1; i--) {
             const regex = new RegExp(`\\b${i}\\b`);
             if (regex.test(lower) && !lower.includes(`special ${i}`)) {
@@ -423,20 +590,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Generic Action Cards (Freeze, Flip 3, Second Chance, Modifier, Action)
-        if (lower.includes('action') || lower.includes('freeze') || lower.includes('flip 3') || lower.includes('second chance') || lower.includes('modifier')) {
-            drawCardOther('action_deck');
+        // Itemized Action Cards
+        if (lower.includes('steal')) {
+            drawCardOther('act_steal');
+            return;
+        }
+        if (lower.includes('swap')) {
+            drawCardOther('act_swap');
+            return;
+        }
+        if (lower.includes('discard') && !lower.includes('shuffled the discard')) {
+            drawCardOther('act_discard');
+            return;
+        }
+        if (lower.includes('one more draw') || lower.includes('one more')) {
+            drawCardOther('act_onemore');
+            return;
+        }
+        if (lower.includes('draw 4')) {
+            drawCardOther('act_draw4');
+            return;
+        }
+        if (lower.includes('negative') || lower.includes('minus')) {
+            drawCardOther('act_negative');
             return;
         }
     }
 
     // Buttons
     document.getElementById('btnClearHand').addEventListener('click', () => {
-        CARD_DEFS.forEach(card => {
-            discardPile[card.id] += myHand[card.id];
-            myHand[card.id] = 0;
-        });
-        updateUI();
+        clearMyHand();
         logMessage('Cleared My Hand cards into discard pile.');
     });
 
@@ -465,12 +648,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Script Modal
+    // Modal and View Toggles
     const scriptModal = document.getElementById('scriptModal');
     document.getElementById('btnScriptModal').addEventListener('click', () => {
         document.getElementById('scriptCodeBlock').textContent = getTampermonkeyScriptCode();
         document.getElementById('bookmarkletCodeBlock').textContent = getBookmarkletCode();
         scriptModal.classList.add('active');
+    });
+
+    document.getElementById('btnToggleCompact').addEventListener('click', () => {
+        document.body.classList.toggle('compact-mode');
     });
 
     document.getElementById('btnCloseModal').addEventListener('click', () => {
@@ -523,9 +710,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!logElem || logElem.dataset.tracked) return;
         logElem.dataset.tracked = "true";
 
-        const text = logElem.innerText || logElem.textContent;
+        const text = logElem.innerHTML || logElem.innerText || logElem.textContent;
         if (text) {
-            console.log('[Flip7 Log Detected]:', text);
+            console.log('[Flip7 Log HTML Detected]:', text);
             sendToTracker('http://localhost:3000/api/log?text=' + encodeURIComponent(text));
         }
     }
@@ -570,5 +757,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Start App
+    initQuickAddDropdown();
     initGame();
 });

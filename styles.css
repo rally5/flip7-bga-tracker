@@ -685,3 +685,161 @@ body {
     from { opacity: 0; transform: translateY(-6px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* =========================================
+   COMPACT VIEW MODE OVERRIDES
+   ========================================= */
+body.compact-mode {
+    padding: 6px;
+}
+
+body.compact-mode .header {
+    padding: 8px 12px;
+    margin-bottom: 8px;
+}
+
+body.compact-mode .header-title-group h1 {
+    font-size: 1.1rem;
+}
+
+body.compact-mode .header-title-group h1 span,
+body.compact-mode .header-title-group .subtitle,
+body.compact-mode .header-controls .btn span,
+body.compact-mode .stats-bar,
+body.compact-mode .sidebar-panel,
+body.compact-mode .draw-odds-badge .odds-label,
+body.compact-mode .count-info span:first-child,
+body.compact-mode .progress-track,
+body.compact-mode .section-title .badge {
+    display: none;
+}
+
+body.compact-mode .header-controls .btn {
+    padding: 6px;
+    font-size: 1.2rem;
+}
+
+/* Sticky Hand/Risk Widget */
+body.compact-mode .hand-risk-widget {
+    position: sticky;
+    top: 6px;
+    z-index: 100;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), var(--shadow-glow);
+}
+
+body.compact-mode .bust-risk-box {
+    padding: 6px 12px;
+}
+
+body.compact-mode .bust-risk-val {
+    font-size: 1.5rem;
+}
+
+body.compact-mode .bust-risk-box .stat-hint {
+    display: none;
+}
+
+/* Main Layout & Grids */
+body.compact-mode .main-layout {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    margin: 0; /* Align left to stay tight */
+}
+
+body.compact-mode .cards-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+/* Tight Stacked Bars */
+body.compact-mode .card-tile {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 4px 8px;
+    gap: 12px; /* Small gap between sections */
+}
+
+body.compact-mode .card-tile-header {
+    margin-bottom: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    width: auto; /* Remove fixed width */
+}
+
+body.compact-mode .card-number {
+    font-size: 1.05rem;
+    min-width: 25px; /* Keep numbers aligned */
+}
+
+body.compact-mode .draw-odds-badge {
+    padding: 3px 6px;
+    flex-direction: row;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+body.compact-mode .card-tile-body {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    width: auto;
+    margin-top: 0;
+}
+
+body.compact-mode .count-info {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    min-width: 35px; /* Just enough for '13 / 13' */
+    text-align: center;
+}
+
+body.compact-mode .card-controls-dual {
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+}
+
+body.compact-mode .btn-card-action {
+    padding: 2px 6px;
+    font-size: 0.65rem;
+    width: max-content; /* Prevents stretching */
+}
+
+body.compact-mode .card-controls-undo {
+    display: flex;
+    align-items: center;
+}
+
+body.compact-mode .btn-undo-small {
+    padding: 2px 4px;
+    font-size: 0.65rem;
+    width: max-content;
+    border: 1px dashed rgba(255,255,255,0.2);
+}
+
+body.compact-mode .section-title {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+body.compact-mode .header-title-group h1 {
+    display: none;
+}
+body.compact-mode .widget-label span:first-child {
+    display: none;
+}
+body.compact-mode #inputMyUsername {
+    display: none;
+}

@@ -33,9 +33,11 @@
         if (!logElem || logElem.dataset.tracked) return;
         logElem.dataset.tracked = "true";
 
-        const text = logElem.innerText || logElem.textContent;
+        // BGA often uses images or CSS classes for cards, so innerText is missing the numbers.
+        // We will send the innerHTML so the app can parse the HTML tags directly!
+        const text = logElem.innerHTML || logElem.innerText || logElem.textContent;
         if (text) {
-            console.log('[Flip7 Log Detected]:', text);
+            console.log('[Flip7 Log HTML Detected]:', text);
             sendToTracker('http://localhost:3000/api/log?text=' + encodeURIComponent(text));
         }
     }

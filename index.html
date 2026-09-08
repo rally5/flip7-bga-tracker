@@ -16,9 +16,10 @@
                 <div class="subtitle">Next-Draw Probabilities & Player Bust Risk Calculator</div>
             </div>
             <div class="header-controls">
-                <button class="btn btn-secondary" id="btnScriptModal">🔌 Get BGA Script</button>
-                <button class="btn btn-danger" id="btnReshuffle">🔄 Reshuffle Deck</button>
-                <button class="btn btn-primary" id="btnResetAll">✨ New Game</button>
+                <button class="btn btn-secondary" id="btnToggleCompact">📱 <span>Compact</span></button>
+                <button class="btn btn-secondary" id="btnScriptModal">🔌 <span>Get Script</span></button>
+                <button class="btn btn-danger" id="btnReshuffle">🔄 <span>Reshuffle Deck</span></button>
+                <button class="btn btn-primary" id="btnResetAll">✨ <span>New Game</span></button>
             </div>
         </header>
 
@@ -27,7 +28,14 @@
             <div class="hand-display-area">
                 <div class="widget-label">
                     <span>🎴 My Current Hand Cards</span>
-                    <button id="btnClearHand" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; text-decoration: underline;">(Clear Hand)</button>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="inputMyUsername" value="RallyAll" placeholder="BGA Username" style="background: rgba(2, 6, 23, 0.8); border: 1px solid var(--border-color); color: #fff; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 0.75rem; width: 100px;" title="Auto-assign cards to hand when this user draws them">
+                        <button id="btnClearHand" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; text-decoration: underline;">(Clear)</button>
+                    </div>
+                </div>
+                <div class="quick-add-hand" style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                    <select id="selectQuickAdd" style="background: rgba(2, 6, 23, 0.8); border: 1px solid var(--border-color); color: #fff; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 0.85rem; outline: none;"></select>
+                    <button id="btnQuickAdd" class="btn btn-primary" style="padding: 4px 10px; font-size: 0.75rem;">+ Add</button>
                 </div>
                 <div class="my-hand-cards" id="myHandCardsContainer">
                     <span style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;">No cards in hand. Click "+ Hand" on any card below to add it.</span>
