@@ -1,42 +1,42 @@
 /**
  * Flip 7: Vengeance Draw Odds & Player Bust Risk Engine
- * Exact 114 Card Deck Model (91 Number + 3 Itemized Special + 20 Lumped Action)
+ * Exact 108 Card Deck Model (89 Standard Numbers + 3 Special 0/U7/L13 + 16 Action & Modifiers)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Deck Definition: Exactly 114 Cards
-    // Numbers 1 to 13 = 91 cards
-    // Special 0, Special 7, Special 13 = 1 copy each (3 cards)
-    // Generic Lumped Action Deck = 20 cards
-    // Total = 114 cards
+    // 1. Deck Definition: Exactly 108 Cards
+    // Numbers: 1 to 6 (21), 7 (6), 8 to 12 (50), 13 (12) = 89 cards
+    // Special: 0 (1), Unlucky 7 (1), Lucky 13 (1) = 3 cards
+    // Actions & Modifiers: 10 Actions (2x Steal, 2x Swap, 2x Discard, 2x +1, 2x Flip 4) + 6x -# = 16 cards
+    // Total = 89 + 3 + 16 = 108 cards
     const CARD_DEFS = [
-        // Standard Numbers (91 cards total)
+        // Standard Numbers (89 cards total: max 6 of 7s and 12 of 13s)
         { id: 'num_1', name: '1', type: 'standard', value: 1, initialCount: 1 },
         { id: 'num_2', name: '2', type: 'standard', value: 2, initialCount: 2 },
         { id: 'num_3', name: '3', type: 'standard', value: 3, initialCount: 3 },
         { id: 'num_4', name: '4', type: 'standard', value: 4, initialCount: 4 },
         { id: 'num_5', name: '5', type: 'standard', value: 5, initialCount: 5 },
         { id: 'num_6', name: '6', type: 'standard', value: 6, initialCount: 6 },
-        { id: 'num_7', name: '7', type: 'standard', value: 7, initialCount: 7 },
+        { id: 'num_7', name: '7', type: 'standard', value: 7, initialCount: 6 },
         { id: 'num_8', name: '8', type: 'standard', value: 8, initialCount: 8 },
         { id: 'num_9', name: '9', type: 'standard', value: 9, initialCount: 9 },
         { id: 'num_10', name: '10', type: 'standard', value: 10, initialCount: 10 },
         { id: 'num_11', name: '11', type: 'standard', value: 11, initialCount: 11 },
         { id: 'num_12', name: '12', type: 'standard', value: 12, initialCount: 12 },
-        { id: 'num_13', name: '13', type: 'standard', value: 13, initialCount: 13 },
+        { id: 'num_13', name: '13', type: 'standard', value: 13, initialCount: 12 },
 
-        // Itemized Special Cards (1 copy each = 3 cards)
-        { id: 'spec_0', name: 'L0', type: 'special', value: 'S0', initialCount: 1 },
-        { id: 'spec_7', name: 'L7', type: 'special', value: 'S7', initialCount: 1 },
+        // Itemized Special Cards (3 cards: The 0, Unlucky 7, Lucky 13)
+        { id: 'spec_0', name: '0', type: 'special', value: 'S0', initialCount: 1 },
+        { id: 'spec_7', name: 'U7', type: 'special', value: 'S7', initialCount: 1 },
         { id: 'spec_13', name: 'L13', type: 'special', value: 'S13', initialCount: 1 },
 
-        // Itemized Action Cards (Total 20 cards, exact counts estimated until known)
-        { id: 'act_steal', name: 'Steal', type: 'action_lump', value: 'ACT', initialCount: 3 },
-        { id: 'act_swap', name: 'Swap', type: 'action_lump', value: 'ACT', initialCount: 3 },
-        { id: 'act_discard', name: 'Discard', type: 'action_lump', value: 'ACT', initialCount: 3 },
-        { id: 'act_onemore', name: '+1', type: 'action_lump', value: 'ACT', initialCount: 3 },
-        { id: 'act_draw4', name: 'Flip 4', type: 'action_lump', value: 'ACT', initialCount: 3 },
-        { id: 'act_negative', name: '-#', type: 'action_lump', value: 'ACT', initialCount: 5 }
+        // Action & Modifier Cards (Total 16 cards: 2 each of Steal, Swap, Discard, +1, Flip 4, and 6 of -#)
+        { id: 'act_steal', name: 'Steal', type: 'action_lump', value: 'ACT', initialCount: 2 },
+        { id: 'act_swap', name: 'Swap', type: 'action_lump', value: 'ACT', initialCount: 2 },
+        { id: 'act_discard', name: 'Discard', type: 'action_lump', value: 'ACT', initialCount: 2 },
+        { id: 'act_onemore', name: '+1', type: 'action_lump', value: 'ACT', initialCount: 2 },
+        { id: 'act_draw4', name: 'Flip 4', type: 'action_lump', value: 'ACT', initialCount: 2 },
+        { id: 'act_negative', name: '-#', type: 'action_lump', value: 'ACT', initialCount: 6 }
     ];
 
     // State Tracking
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
             myHand[card.id] = 0;
         });
         updateUI();
-        logMessage('Game state initialized. 114 cards restored to draw deck.');
+        logMessage('Game state initialized. 108 cards restored to draw deck.');
         document.getElementById('reshuffleBanner').classList.add('hidden');
     }
 
@@ -178,26 +178,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Reshuffle Discards into Draw Deck (Active Cards in My Hand stay excluded!)
+    // Reshuffle 100% of cards back into the draw deck (Full override of all hands & discards)
     function triggerReshuffle() {
-        const discardCountBefore = getTotalDiscardCount();
-        const myHandCount = getTotalMyHandCount();
-
+        opponentHands = {};
         CARD_DEFS.forEach(card => {
-            // Add discard pile back into the draw pile
-            drawPile[card.id] += discardPile[card.id];
+            drawPile[card.id] = card.initialCount;
             discardPile[card.id] = 0;
-            // Cards in myHand remain where they are!
+            myHand[card.id] = 0;
         });
 
         updateUI();
 
         const banner = document.getElementById('reshuffleBanner');
         const bannerText = document.getElementById('reshuffleBannerText');
-        bannerText.innerHTML = `Shuffled <strong>${discardCountBefore}</strong> discarded cards into draw deck. <strong>${myHandCount}</strong> cards in your hand were excluded.`;
-        banner.classList.remove('hidden');
+        if (banner && bannerText) {
+            bannerText.innerHTML = `Full Deck Reshuffle! <strong>100%</strong> of cards (108 total) restored to draw deck. All player hands cleared.`;
+            banner.classList.remove('hidden');
+        }
 
-        logMessage(`🔄 RESHUFFLE: ${discardCountBefore} cards added to draw deck. ${myHandCount} cards excluded in hand.`, true);
+        logMessage(`🔄 FULL RESHUFFLE: 100% of cards (108 total) restored to draw deck. All player hands & discards reset.`, true);
     }
 
     // Calculate Player Bust Risk
@@ -206,12 +205,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (totalDraw === 0) return 0;
 
         let bustCountInDrawPile = 0;
+        
         CARD_DEFS.forEach(card => {
-            // If player holds this card in hand and it's a number card (or special number card)
-            if (myHand[card.id] > 0 && card.type === 'standard') {
-                bustCountInDrawPile += drawPile[card.id];
+            // Check standard number cards 1 through 12 (except 13 and 7 which have special handling)
+            if (card.type === 'standard' && card.id !== 'num_13' && card.id !== 'num_7') {
+                if (myHand[card.id] > 0) {
+                    bustCountInDrawPile += drawPile[card.id];
+                }
             }
         });
+
+        // 7s handling: If player has a normal 7, remaining normal 7s bust
+        if ((myHand['num_7'] || 0) > 0) {
+            bustCountInDrawPile += drawPile['num_7'];
+        }
+
+        // 13s handling with Lucky 13 protection:
+        const normal13InHand = myHand['num_13'] || 0;
+        const lucky13InHand = myHand['spec_13'] || 0;
+        const total13sInHand = normal13InHand + lucky13InHand;
+
+        if (lucky13InHand > 0) {
+            // Lucky 13 absorbs one duplicate. If holding >= 2 total 13s, next normal 13 busts
+            if (total13sInHand >= 2) {
+                bustCountInDrawPile += drawPile['num_13'];
+            }
+        } else {
+            // Without Lucky 13, holding even 1 normal 13 means drawing another normal 13 busts
+            if (normal13InHand > 0) {
+                bustCountInDrawPile += drawPile['num_13'];
+            }
+        }
 
         return (bustCountInDrawPile / totalDraw) * 100;
     }
@@ -362,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Initialize Quick Add Dropdown (1-13)
+    // Initialize Quick Add Dropdown (Standard 1-13 + Specials 0, U7, L13)
     function initQuickAddDropdown() {
         const select = document.getElementById('selectQuickAdd');
         const btnAdd = document.getElementById('btnQuickAdd');
@@ -370,8 +394,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         select.innerHTML = '';
         
-        // Populate options for standard cards 1-13
-        CARD_DEFS.filter(c => c.type === 'standard').forEach(card => {
+        // Populate options for standard cards 1-13 and special cards
+        CARD_DEFS.filter(c => c.type === 'standard' || c.type === 'special').forEach(card => {
             const opt = document.createElement('option');
             opt.value = card.id;
             opt.textContent = `+${card.name}`;
@@ -392,10 +416,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalDiscard = getTotalDiscardCount();
         const totalMyHand = getTotalMyHandCount();
 
-        document.getElementById('statDrawCount').textContent = totalDraw;
-        document.getElementById('statDiscardCount').textContent = totalDiscard;
-        document.getElementById('statMyHandCount').textContent = totalMyHand;
-        document.getElementById('statDrawPercent').textContent = `${totalDraw} / 114 Cards Remaining`;
+        const statDrawCount = document.getElementById('statDrawCount');
+        if (statDrawCount) statDrawCount.textContent = totalDraw;
+
+        const headerDrawCount = document.getElementById('headerDrawCount');
+        if (headerDrawCount) headerDrawCount.textContent = totalDraw;
+
+        const statDiscardCount = document.getElementById('statDiscardCount');
+        if (statDiscardCount) statDiscardCount.textContent = totalDiscard;
+
+        const statMyHandCount = document.getElementById('statMyHandCount');
+        if (statMyHandCount) statMyHandCount.textContent = totalMyHand;
+
+        const statDrawPercent = document.getElementById('statDrawPercent');
+        if (statDrawPercent) statDrawPercent.textContent = `${totalDraw} / 108 Cards Remaining`;
 
         renderGrids();
         renderMyHandAndBustRisk();
@@ -624,7 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('btnResetAll').addEventListener('click', () => {
-        if (confirm('Reset 114 card deck and start a new game?')) {
+        if (confirm('Reset 108 card deck and start a new game?')) {
             initGame();
         }
     });

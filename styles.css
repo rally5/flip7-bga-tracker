@@ -87,6 +87,46 @@ body {
     margin-top: 4px;
 }
 
+.header-draw-widget {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.85));
+    border: 1px solid var(--border-glow);
+    padding: 8px 20px;
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.header-draw-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent-blue);
+    white-space: nowrap;
+}
+
+.header-draw-value-group {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.header-draw-count {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.header-draw-total {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
 .header-controls {
     display: flex;
     gap: 12px;
@@ -750,58 +790,74 @@ body.compact-mode .main-layout {
     margin: 0; /* Align left to stay tight */
 }
 
+/* Tight Stacked Single-Line Bars */
 body.compact-mode .cards-grid {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
-    margin-bottom: 16px;
+    gap: 3px;
+    margin-bottom: 4px;
 }
 
-/* Tight Stacked Bars */
 body.compact-mode .card-tile {
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    padding: 4px 8px;
-    gap: 12px; /* Small gap between sections */
+    padding: 2px 8px;
+    gap: 8px;
+    min-height: 28px;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+    border-radius: var(--radius-sm);
 }
 
 body.compact-mode .card-tile-header {
     margin-bottom: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    width: auto;
+    flex-shrink: 0;
+}
+
+body.compact-mode .card-number {
+    font-size: 0.95rem;
+    min-width: 24px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+body.compact-mode .draw-odds-badge {
+    padding: 2px 6px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    min-width: 50px;
+    line-height: 1;
+}
+
+body.compact-mode .card-tile-body {
+    display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     gap: 8px;
-    width: auto; /* Remove fixed width */
-}
-
-body.compact-mode .card-number {
-    font-size: 1.05rem;
-    min-width: 25px; /* Keep numbers aligned */
-}
-
-body.compact-mode .draw-odds-badge {
-    padding: 3px 6px;
-    flex-direction: row;
-    align-items: center;
-    font-size: 0.85rem;
-}
-
-body.compact-mode .card-tile-body {
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
     width: auto;
     margin-top: 0;
+    flex-shrink: 0;
 }
 
 body.compact-mode .count-info {
     margin-bottom: 0;
-    font-size: 0.9rem;
-    min-width: 35px; /* Just enough for '13 / 13' */
+    font-size: 0.82rem;
+    font-family: 'JetBrains Mono', monospace;
+    min-width: 44px;
     text-align: center;
+    color: var(--text-secondary);
 }
 
 body.compact-mode .card-controls-dual {
@@ -809,33 +865,54 @@ body.compact-mode .card-controls-dual {
     display: flex;
     flex-direction: row;
     gap: 4px;
+    align-items: center;
 }
 
 body.compact-mode .btn-card-action {
     padding: 2px 6px;
-    font-size: 0.65rem;
-    width: max-content; /* Prevents stretching */
+    font-size: 0.7rem;
+    height: 22px;
+    line-height: 1;
+    width: max-content;
 }
 
 body.compact-mode .card-controls-undo {
     display: flex;
     align-items: center;
+    margin-bottom: 0;
 }
 
 body.compact-mode .btn-undo-small {
-    padding: 2px 4px;
-    font-size: 0.65rem;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    height: 22px;
+    line-height: 1;
     width: max-content;
-    border: 1px dashed rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 body.compact-mode .section-title {
-    font-size: 0.85rem;
-    margin-bottom: 6px;
+    display: none;
 }
 
-body.compact-mode .header-title-group h1 {
+body.compact-mode .header-title-group {
     display: none;
+}
+body.compact-mode .header-draw-widget {
+    padding: 4px 10px;
+    gap: 8px;
+    border-radius: var(--radius-sm);
+    box-shadow: none;
+    background: rgba(15, 23, 42, 0.7);
+}
+body.compact-mode .header-draw-label {
+    font-size: 0.75rem;
+}
+body.compact-mode .header-draw-count {
+    font-size: 1.25rem;
+}
+body.compact-mode .header-draw-total {
+    font-size: 0.75rem;
 }
 body.compact-mode .widget-label span:first-child {
     display: none;

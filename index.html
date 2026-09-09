@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flip 7: Vengeance - Next-Draw Odds & Player Bust Risk Tracker</title>
-    <meta name="description" content="Real-time draw pile odds tracker, player bust risk calculator, and BGA auto-sync suite for Flip 7: Vengeance (114 cards).">
+    <meta name="description" content="Real-time draw pile odds tracker, player bust risk calculator, and BGA auto-sync suite for Flip 7: Vengeance (108 cards).">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,8 +12,15 @@
         <!-- Header -->
         <header class="header">
             <div class="header-title-group">
-                <h1>🔥 Flip 7: Vengeance <span style="font-size: 0.9rem; font-weight: 500; color: var(--accent-purple); border: 1px solid var(--special-border); padding: 3px 10px; border-radius: 20px;">114 Deck Tracker</span></h1>
+                <h1>🔥 Flip 7: Vengeance <span style="font-size: 0.9rem; font-weight: 500; color: var(--accent-purple); border: 1px solid var(--special-border); padding: 3px 10px; border-radius: 20px;">108 Deck Tracker</span></h1>
                 <div class="subtitle">Next-Draw Probabilities & Player Bust Risk Calculator</div>
+            </div>
+            <div class="header-draw-widget" id="headerDrawWidget" title="Cards remaining in draw pile">
+                <div class="header-draw-label">🎴 Draw Deck</div>
+                <div class="header-draw-value-group">
+                    <span class="header-draw-count" id="headerDrawCount">108</span>
+                    <span class="header-draw-total">/ 108</span>
+                </div>
             </div>
             <div class="header-controls">
                 <button class="btn btn-secondary" id="btnToggleCompact">📱 <span>Compact</span></button>
@@ -52,8 +59,8 @@
         <section class="stats-bar">
             <div class="stat-card">
                 <span class="stat-label">Draw Pile Remaining</span>
-                <span class="stat-value" id="statDrawCount">114</span>
-                <span class="stat-hint" id="statDrawPercent">114 Total Cards in Deck</span>
+                <span class="stat-value" id="statDrawCount">108</span>
+                <span class="stat-hint" id="statDrawPercent">108 Total Cards in Deck</span>
             </div>
             <div class="stat-card">
                 <span class="stat-label">Discard Pile</span>
@@ -79,25 +86,25 @@
                 <!-- Standard Number Cards (1 - 13) -->
                 <div class="section-title">
                     <span>🃏 Standard Number Cards (1 to 13)</span>
-                    <span class="badge">91 Total Number Cards</span>
+                    <span class="badge">89 Total (6x 7s, 12x 13s)</span>
                 </div>
                 <div class="cards-grid" id="standardCardsGrid">
                     <!-- Dynamic rendering via app.js -->
                 </div>
 
-                <!-- Special Action Cards (Special 0, Special 7, Special 13 - 1 copy each) -->
+                <!-- Special Action Cards (The 0, Unlucky 7, Lucky 13 - 1 copy each) -->
                 <div class="section-title" style="margin-top: 12px;">
-                    <span>⭐ Special Action Cards (Itemized)</span>
-                    <span class="badge" style="background: rgba(217, 70, 239, 0.2); color: var(--odds-extreme);">1 Copy Each</span>
+                    <span>⭐ Special Cards (The 0, Unlucky 7, Lucky 13)</span>
+                    <span class="badge" style="background: rgba(217, 70, 239, 0.2); color: var(--odds-extreme);">3 Cards Total</span>
                 </div>
                 <div class="cards-grid" id="specialCardsGrid">
                     <!-- Dynamic rendering via app.js -->
                 </div>
 
-                <!-- Lumped Action Cards Deck (20 cards) -->
+                <!-- Action & Modifier Cards Deck (16 cards) -->
                 <div class="section-title" style="margin-top: 12px;">
-                    <span>⚡ Action Cards (Generic Lumped Deck)</span>
-                    <span class="badge" style="background: rgba(56, 189, 248, 0.2); color: var(--accent-blue);">20 Total Action Cards</span>
+                    <span>⚡ Action & Modifier Cards</span>
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.2); color: var(--accent-blue);">16 Cards Total</span>
                 </div>
                 <div class="cards-grid" id="actionCardsGrid">
                     <!-- Dynamic rendering via app.js -->
@@ -128,7 +135,7 @@
                     </div>
                     <div class="log-stream-box" id="logStream">
                         <div class="log-entry">
-                            <span class="timestamp">System</span> 114 Card Flip 7 Vengeance Tracker initialized.
+                            <span class="timestamp">System</span> 108 Card Flip 7 Vengeance Tracker initialized.
                         </div>
                     </div>
                     <!-- Simulator / Manual Test Input -->
